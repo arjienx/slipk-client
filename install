@@ -1,0 +1,100 @@
+#!/bin/bash
+# Arjienx Advanced DNSTT App Script v.0.2.3x 2025
+
+cd ~
+rm -rf install
+architecture=$(uname -m)
+echo "Architecture: $architecture"
+
+if [ ! -d "$HOME/storage" ]; then
+    termux-setup-storage
+fi
+
+version=$(getprop ro.build.version.release)
+if [[ "$version" =~ ^5.* || "$version" =~ ^6.* ]]; then
+    echo "deb https://packages.termux.dev/termux-main-21/ stable main" > "$PREFIX/etc/apt/sources.list"
+    echo "deb https://termux.dev/game-packages-21-bin games stable" > "$PREFIX/etc/apt/sources.list.d/game.list"
+    echo "deb https://termux.dev/science-packages-21-bin science stable" > "$PREFIX/etc/apt/sources.list.d/science.list"
+    clear
+else
+    echo "Current version: $version"
+fi
+
+export DEBIAN_FRONTEND=noninteractive
+apt update
+apt upgrade -y
+apt upgrade -y openssl curl -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+apt install -y dnsutils nano curl -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+
+rm -rf ~/.bashrc
+echo "alias slipstream='cd ~ && slipstream'" > ~/.bashrc
+echo "alias arjienx-slipk='cd ~ && arjienx-slipk'" > ~/.bashrc
+echo "alias slipk='cd ~ && slipk'" > ~/.bashrc
+source ~/.bashrc
+
+arch=$(uname -m)
+
+case "$arch" in
+    aarch64|arm64)
+        CLIENT_URL="https://raw.githubusercontent.com/arjienx/slipk-client/main/slipstream-app-arm64-v8a"
+        SS_URL="https://raw.githubusercontent.com/arjienx/slipk-client/main/app-arm64-v8a"
+        ;;
+    armv7l|armv7)
+        CLIENT_URL="https://raw.githubusercontent.com/arjienx/slipk-client/main/slipstream-app-armeabi-v7a"
+        SS_URL="https://raw.githubusercontent.com/arjienx/slipk-client/main/app-armeabi-v7a"
+        ;;
+    armv8l)
+        CLIENT_URL="https://raw.githubusercontent.com/arjienx/slipk-client/main/slipstream-app-armeabi-v7a"
+        SS_URL="https://raw.githubusercontent.com/arjienx/slipk-client/main/app-armeabi-v7a"
+        ;;
+    *)
+        echo "unknown architecture: $arch"
+        exit 1
+        ;;
+esac
+
+echo "" > ../usr/bin/slipk
+curl --insecure -fL -o ../usr/bin/slipk "$SS_URL"
+
+if [ $? -eq 0 ]; then
+    chmod +x ../usr/bin/slipk
+    for i in {1..2}; do
+        if [ ! -x ../usr/bin/slipk ]; then
+            chmod +x ../usr/bin/slipk
+        fi
+        sleep 3
+    done
+    echo "Arjienx Slipstream Client - Successfully Installed."
+else
+    rm -rf ../usr/bin/slipk
+    echo "Download Failed. Use Stable Connection. Try Again."
+fi
+
+echo "" > ../usr/bin/arjienx-slipk
+echo "" > ../usr/bin/slipstream
+
+curl --insecure -fL -o ../usr/bin/arjienx-slipk "$CLIENT_URL"
+cp ../usr/bin/arjienx-slipk ../usr/bin/slipstream
+
+if [ $? -eq 0 ]; then
+    chmod +x ../usr/bin/arjienx-slipk
+    for i in {1..2}; do
+        if [ ! -x ../usr/bin/arjienx-slipk ]; then
+            chmod +x ../usr/bin/arjienx-slipk
+        fi
+        sleep 3
+    done
+    chmod +x ../usr/bin/slipstream
+    for i in {1..2}; do
+        if [ ! -x ../usr/bin/slipstream ]; then
+            chmod +x ../usr/bin/slipstream
+        fi
+        sleep 3
+    done
+    echo "Arjienx DNSTT Client UI - Successfully Installed."
+    echo "type 'slipstream' or 'arjienx-slipk' to run."
+else
+    rm -rf ../usr/bin/slipstream
+    rm -rf ../usr/bin/arjienx-slipk
+    echo "Download Failed. Use Stable Connection. Try Again."
+fi
